@@ -1,0 +1,63 @@
+*narrow.txt*  Emulating Emacs narrowing feature.
+
+Author:  Peter Rincker
+
+==============================================================================
+OVERVIEW                                                              *narrow*
+
+Narrowing a region of text will copy the region into a scratch buffer in which
+it can be freely manipulated. After your changes are done just write the buffer
+with |:w|, |:update|, |:x|, or whatever is your favorite way to write a
+buffer. Upon writing the buffer the changes will be made to the original
+buffer as well. If you have made changes that you do not want to write back
+the original buffer just close the buffer with :q!.
+
+Narrow will mark the original buffer as read only and disable modifications.
+Multiple narrowed region can be taken from the same buffer. This is useful in
+the case of taking the diff of two different regions in the same file. Once
+all narrowed regions are closed then the original buffer will modifiable again
+(assuming it started out that way).
+
+==============================================================================
+FEATURES                                                     *narrow-features*
+
+* Able to narrow regions characterwise, linewise, and visual-blockwise
+* Aware of ragged visual block mode. i.e. |v_$|
+* Narrow multiple regions per buffer.
+
+==============================================================================
+USAGE                                                           *narrow-usage*
+
+<leader>nr		Narrow a region that is selected visually.
+
+Used in narrowed window~
+
+:w[rite]		Write the buffer back to the original buffer.
+:up[date]
+
+:x[xit]			Same as :w followed by a :q
+
+:q[uit]!		Close a narrowed region without writing back the
+			changes.
+==============================================================================
+CUSTOMIZE                                                   *narrow-customize*
+
+Use a different mapping for narrowing: >
+	vmap N <Plug>Narrow
+<
+
+==============================================================================
+TODO                                                             *narrow-todo*
+
+* Ensure that multiple regions in the same buffer do not overlap.
+* Make sure multiple visual-block regions behave nicely together.
+* Mark region somehow to signify a region that has been narrowed.
+* Provide a narrowing operator and narrow command.
+* Test with 'virtualedit'.
+
+==============================================================================
+CREDITS                                                       *narrow-credits*
+
+Used Christian Brabandt's NrrwRgn as the base implementation.
+
+ vim:tw=78:ts=8:ft=help:norl:

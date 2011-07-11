@@ -1,0 +1,12 @@
+Narrowing a region of text will copy the region into a scratch buffer in which
+it can be freely manipulated. After your changes are done just write the buffer
+with :w, :update, :x, or whatever is your favorite way to write a
+buffer. Upon writing the buffer the changes will be made to the original
+buffer as well. If you have made changes that you do not want to write back
+the original buffer just close the buffer with :q!.
+
+Narrow will mark the original buffer as read only and disable modifications.
+Multiple narrowed region can be taken from the same buffer. This is useful in
+the case of taking the diff of two different regions in the same file. Once
+all narrowed regions are closed then the original buffer will modifiable again
+(assuming it started out that way).
