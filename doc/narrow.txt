@@ -35,7 +35,7 @@ Used in narrowed window~
 :w[rite]		Write the buffer back to the original buffer.
 :up[date]
 
-:x[xit]			Same as :w followed by a :q
+:x[it]			Same as :w followed by a :q
 
 :q[uit]!		Close a narrowed region without writing back the
 			changes.
@@ -51,7 +51,6 @@ TODO                                                             *narrow-todo*
 
 * Ensure that multiple regions in the same buffer do not overlap.
 * Make sure multiple visual-block regions behave nicely together.
-* Mark region somehow to signify a region that has been narrowed.
 * Provide a narrowing operator and narrow command.
 * Test with 'virtualedit'.
 

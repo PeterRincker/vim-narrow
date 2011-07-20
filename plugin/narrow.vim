@@ -6,6 +6,11 @@ let g:loaded_narrow = 1
 let s:region = {}
 let s:buffers = {}
 
+if !exists('g:narrow_highlight')
+  let g:narrow_highlight = 'DiffChange'
+endif
+exe "highlight def link NarrowedRegion " . g:narrow_highlight
+
 function! s:fnameescape(file) abort
   if exists('*fnameescape')
     return fnameescape(a:file)
@@ -44,10 +49,13 @@ function! s:Narrow()
       let s:buffers[region.bufnr].regions = {}
       let s:buffers[region.bufnr].ma = getbufvar(region.bufnr, '&ma')
       let s:buffers[region.bufnr].ro = getbufvar(region.bufnr, '&ro')
+      let s:buffers[region.bufnr].tick = 0
       call setbufvar(region.bufnr, '&ma', 0)
       call setbufvar(region.bufnr, '&ro', 1)
     endif
     let region.number = max(map(copy(s:buffers[region.bufnr].regions), 's:region[+v:key].number')) + 1
+
+    let s:buffers[region.bufnr].tick += 1
 
     " create new scratch like buffer
     if bufname(region.bufnr) == ""
@@ -80,10 +88,14 @@ function! s:Narrow()
       echohl WarningMsg
       echo "Buffer is protected, won't be able to write changes back!"
       echohl None
-      aug Narrow
-        au! * <buffer>
-      aug END
     endif
+
+    aug NarrowHighlight
+      exe "au! * <buffer=" . region.bufnr . ">"
+      exe "au WinEnter <buffer=" . region.bufnr . "> call s:HighlightWindow()"
+    aug END
+
+    call s:Rehighlight()
 
   finally
     let &ve = ve
@@ -165,8 +177,6 @@ function! s:WriteRegion(nr)
       let s:region[a:nr].lastcol = s:region[a:nr].firstcol + width - 1
     endif
 
-    exe "noa " . bufwinnr(a:nr) . "wincmd w"
-
     " make original buffer unwritable again
     call setbufvar(region.bufnr, '&ma', 0)
     call setbufvar(region.bufnr, '&ro', 1)
@@ -197,6 +207,13 @@ function! s:WriteRegion(nr)
         endif
       endfor
     endif
+
+    " rehighlight
+    let s:buffers[region.bufnr].tick += 1
+    call s:Rehighlight()
+
+    " move back to window that was written
+    exe "noa " . bufwinnr(a:nr) . "wincmd w"
 
     " Set new region buffer to unmodified as this is to be a write
     call setbufvar(a:nr, '&mod', 0)
@@ -244,6 +261,9 @@ function! s:RemoveRegion(nr)
   let region = copy(s:region[a:nr])
 
   call remove(s:buffers[region.bufnr].regions, a:nr)
+
+  let s:buffers[region.bufnr].tick += 1
+
   if len(s:buffers[region.bufnr].regions) == 0
     " restore original 'modifiable' and 'readonly' options
     call setbufvar(region.bufnr, "&ma", s:buffers[region.bufnr].ma)
@@ -252,9 +272,83 @@ function! s:RemoveRegion(nr)
     call remove(s:buffers, region.bufnr)
   endif
 
+  " rehighlight
+  call s:Rehighlight()
+
   call remove(s:region, a:nr)
   call setbufvar(a:nr, '&mod', 0)
   sil! exe a:nr . "bwipe!"
+endfunction
+
+function! s:HighlightRegion(region)
+  if a:region.vmode == "\<c-v>" || a:region.vmode ==# "V"
+    if a:region.firstline == a:region.lastline
+      let pattern = '\m\%' . a:region.firstline . 'l'
+    else
+      let pattern = '\m\%>' . (a:region.firstline-1) . 'l\%<' . (a:region.lastline+1) . 'l'
+    endif
+
+    if a:region.vmode == "\<c-v>"
+      let pattern .= '\%>' . (a:region.firstcol-1) . 'c'
+      if !a:region.ragged
+        let pattern .= '\%<' . (a:region.lastcol+1) . 'c'
+      endif
+    endif
+  elseif a:region.firstline == a:region.lastline
+    let pattern = '\m\%' . a:region.firstline . 'l\%>' . (a:region.firstcol-1) . 'c\%<' . (a:region.lastcol+1) . 'c'
+  else
+    let pattern = '\m\%(\%' . a:region.firstline . 'l\%>' . (a:region.firstcol-1) . 'c\|\%' . a:region.lastline . 'l\%<' . (a:region.lastcol+1) . 'c'
+    if a:region.lastline - a:region.firstline > 1
+      let pattern .= '\|\%>' . (a:region.firstline) . 'l\%<' . (a:region.lastline) . 'l'
+    endif
+    let pattern .= '\)'
+  endif
+  return matchadd('NarrowedRegion', pattern)
+endfunction
+
+function! s:Rehighlight()
+  let lz = &lz
+  let &lz = 1
+  let wnr = winnr()
+  keepalt windo call s:HighlightWindow()
+  exe "keepalt ". wnr . "wincmd w"
+  let &lz = lz
+endfunction
+
+function! s:HighlightWindow()
+  " check to see if buffer has any narrowed regions
+  let bufnr = bufnr('%')
+  if !has_key(s:buffers, bufnr)
+    if exists('w:narrow_tick')
+      call s:RemoveHighlight()
+      unlet w:narrow_tick
+      aug NarrowHighlight
+        au! * <buffer>
+      aug END
+    endif
+    return
+  endif
+
+  " only highlight when something has changed
+  if exists('w:narrow_tick') && w:narrow_tick == s:buffers[bufnr].tick
+    return
+  endif
+
+  call s:RemoveHighlight()
+
+  " rehighlight
+  for k in keys(s:buffers[bufnr].regions)
+    call s:HighlightRegion(copy(s:region[+k]))
+  endfor
+
+  let w:narrow_tick = s:buffers[bufnr].tick
+endfunction
+
+function! s:RemoveHighlight()
+  " remove old matches
+  for m in map(filter(getmatches(), 'v:val.group == "NarrowedRegion"'), 'v:val.id')
+    silent! call matchdelete(m)
+  endfor
 endfunction
 
 aug Narrow
