@@ -1,4 +1,4 @@
-if (exists("g:loaded_narrow") && g:loaded_narrow) || &cp
+if exists("g:loaded_narrow") || &cp || v:version < 700
     finish
 endif
 let g:loaded_narrow = 1
