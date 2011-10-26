@@ -121,6 +121,10 @@ function! s:WriteRegion(nr)
     return
   endif
 
+  if getbufvar(a:nr, '&mod') == 0
+    return
+  endif
+
   let a = @a
   let at = getregtype("a")
   let lz = &lz
