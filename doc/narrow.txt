@@ -30,6 +30,7 @@ USAGE                                                           *narrow-usage*
 
 <leader>nr		Narrow a region that is selected visually.
 
+
 Used in narrowed window~
 
 :w[rite]		Write the buffer back to the original buffer.
@@ -39,11 +40,16 @@ Used in narrowed window~
 
 :q[uit]!		Close a narrowed region without writing back the
 			changes.
+
+<leader>nd		Narrow a region and mark it one as part of the diff
+			windows.
+
 ==============================================================================
 CUSTOMIZE                                                   *narrow-customize*
 
 Use a different mapping for narrowing: >
 	vmap N <Plug>Narrow
+	vmap D <Plug>NarrowAndDiff
 <
 
 ==============================================================================

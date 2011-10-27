@@ -19,7 +19,32 @@ function! s:fnameescape(file) abort
   endif
 endfunction
 
-function! s:Narrow()
+function! s:NarrowDiff()
+  let wins = filter(range(1, winnr('$')), 'getwinvar(v:val, "&diff") == 1')
+  let env = {}
+  if len(wins) > 0
+    let env['wnr'] = (&diffopt =~ 'horizontal' && &splitbelow) || (&diffopt !~ 'horizontal' && &splitright) ? wins[-1] : wins[0]
+    let env['cmd'] = &diffopt =~ 'horizontal' ? 'new' : 'vnew'
+  else
+    let env['wnr'] = 0
+    let env['cmd'] = 'new'
+  endif
+
+  function env.before(filename) dict
+    if self.wnr != 0
+      exe self.wnr . "wincmd w"
+    endif
+    exe self.cmd . " " . a:filename
+  endfunction
+
+  function env.after() dict
+    diffthis
+  endfunction
+
+  call s:Narrow(env)
+endfunction
+
+function! s:Narrow(...)
   let a = @a
   let at = getregtype("a")
   let ve = &ve
@@ -64,7 +89,11 @@ function! s:Narrow()
       let filename = fnamemodify(bufname(region.bufnr), ':p')
     endif
     let filename = 'narrow://' . filename . '//' . region.number
-    exe "new " . s:fnameescape(filename)
+    if a:0
+      call call(a:1.before, [s:fnameescape(filename)], a:1)
+    else
+      exe "new " . s:fnameescape(filename)
+    endif
     set noswapfile
     set buftype=acwrite
     set bufhidden=wipe
@@ -76,6 +105,10 @@ function! s:Narrow()
 
     let nr = bufnr('%')
     let s:region[nr] = region
+
+    if a:0
+      call call(a:1.after, [], a:1)
+    endif
 
     set nomod
 
@@ -365,4 +398,9 @@ aug END
 map <script> <silent> <Plug>Narrow :<c-u>call <SID>Narrow()<cr>
 if !hasmapto('<Plug>Narrow', 'v')
   vmap <silent> <leader>nr <Plug>Narrow
+endif
+
+map <script> <silent> <Plug>NarrowAndDiff :<c-u>call <SID>NarrowDiff()<cr>
+if !hasmapto('<Plug>NarrowAndDiff', 'v')
+  vmap <silent> <leader>nd <Plug>NarrowAndDiff
 endif
