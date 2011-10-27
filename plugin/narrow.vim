@@ -396,11 +396,11 @@ aug Narrow
 aug END
 
 map <script> <silent> <Plug>Narrow :<c-u>call <SID>Narrow()<cr>
-if !hasmapto('<Plug>Narrow', 'v')
-  vmap <silent> <leader>nr <Plug>Narrow
+if !hasmapto('<Plug>Narrow', 'x')
+  xmap <silent> <leader>nr <Plug>Narrow
 endif
 
 map <script> <silent> <Plug>NarrowAndDiff :<c-u>call <SID>NarrowDiff()<cr>
-if !hasmapto('<Plug>NarrowAndDiff', 'v')
-  vmap <silent> <leader>nd <Plug>NarrowAndDiff
+if !hasmapto('<Plug>NarrowAndDiff', 'x')
+  xmap <silent> <leader>nd <Plug>NarrowAndDiff
 endif

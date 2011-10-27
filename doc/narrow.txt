@@ -48,8 +48,8 @@ Used in narrowed window~
 CUSTOMIZE                                                   *narrow-customize*
 
 Use a different mapping for narrowing: >
-	vmap N <Plug>Narrow
-	vmap D <Plug>NarrowAndDiff
+	xmap N <Plug>Narrow
+	xmap D <Plug>NarrowAndDiff
 <
 
 ==============================================================================
