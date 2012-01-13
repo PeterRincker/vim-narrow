@@ -44,7 +44,7 @@ Used in narrowed window~
 			changes.
 
                                                                *:NarrowSelect*
-:NarrowSelect		Reselect a region
+:NarrowSelect		Reselect the region
 
 
 ==============================================================================
