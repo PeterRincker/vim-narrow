@@ -30,6 +30,8 @@ USAGE                                                           *narrow-usage*
 
 <leader>nr		Narrow a region that is selected visually.
 
+<leader>nd		Narrow a region and mark it one as part of the diff
+			windows.
 
 Used in narrowed window~
 
@@ -42,10 +44,8 @@ Used in narrowed window~
 			changes.
 
                                                                *:NarrowSelect*
-:NarrowSelect		Reselect a the region
+:NarrowSelect		Reselect a region
 
-<leader>nd		Narrow a region and mark it one as part of the diff
-			windows.
 
 ==============================================================================
 CUSTOMIZE                                                   *narrow-customize*
