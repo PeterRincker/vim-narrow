@@ -79,13 +79,11 @@ function! s:Narrow(...)
       let s:buffers[region.bufnr].regions = {}
       let s:buffers[region.bufnr].ma = getbufvar(region.bufnr, '&ma')
       let s:buffers[region.bufnr].ro = getbufvar(region.bufnr, '&ro')
-      let s:buffers[region.bufnr].tick = 0
       call setbufvar(region.bufnr, '&ma', 0)
       call setbufvar(region.bufnr, '&ro', 1)
     endif
     let region.number = max(map(copy(s:buffers[region.bufnr].regions), 's:region[+v:key].number')) + 1
 
-    let s:buffers[region.bufnr].tick += 1
 
     " create new scratch like buffer
     if bufname(region.bufnr) == "" || bufname(region.bufnr) =~ '^narrow:'
@@ -199,10 +197,6 @@ function! s:WriteRegion(nr)
 
       sil norm! "ap
 
-      if exists('g:narrow_debug') && g:narrow_debug
-        echo string(region)
-      endif
-
       " save new region positions via `[ and `] marks
       let s:region[a:nr].firstline = line("'[")
       let s:region[a:nr].lastline = line("']")
@@ -254,7 +248,6 @@ function! s:WriteRegion(nr)
     exe "noa " . bufwinnr(a:nr) . "wincmd w"
 
     " rehighlight
-    let s:buffers[region.bufnr].tick += 1
     call s:Rehighlight()
 
     " Set new region buffer to unmodified as this is to be a write
@@ -303,8 +296,6 @@ function! s:RemoveRegion(nr)
   let region = copy(s:region[a:nr])
 
   call remove(s:buffers[region.bufnr].regions, a:nr)
-
-  let s:buffers[region.bufnr].tick += 1
 
   if len(s:buffers[region.bufnr].regions) == 0
     " restore original 'modifiable' and 'readonly' options
@@ -362,9 +353,9 @@ function! s:HighlightWindow(bufactive)
   " check to see if buffer has any narrowed regions
   let bufnr = bufnr('%')
   if !has_key(s:buffers, bufnr)
-    if exists('w:narrow_tick')
+    if exists('w:narrowed')
       call s:RemoveHighlight()
-      unlet w:narrow_tick
+      unlet w:narrowed
       aug NarrowHighlight
         au! * <buffer>
       aug END
@@ -380,7 +371,7 @@ function! s:HighlightWindow(bufactive)
     call s:HighlightRegion(copy(s:region[+k]), group)
   endfor
 
-  let w:narrow_tick = s:buffers[bufnr].tick
+  let w:narrowed = 1
 endfunction
 
 function! s:RemoveHighlight()
