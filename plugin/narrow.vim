@@ -396,6 +396,10 @@ function! s:SelectRegion()
   endif
 
   exe "noa " . wnr . "wincmd w"
+
+  " rehighlight
+  call s:Rehighlight()
+
   exe "keepj norm! " . region.firstline . "G"
   exe "keepj norm! " . region.firstcol . "|"
   exe "keepj norm! " . region.vmode
