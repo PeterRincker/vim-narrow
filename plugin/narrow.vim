@@ -131,6 +131,8 @@ function! s:Narrow(...)
       exe "au WinEnter <buffer=" . region.bufnr . "> call s:Rehighlight()"
     aug END
 
+    command! -buffer -bar NarrowSelect call s:SelectRegion()
+
     call s:Rehighlight()
 
   finally
@@ -379,6 +381,30 @@ function! s:RemoveHighlight()
   for m in map(filter(getmatches(), 'v:val.group == "NarrowedRegion" || v:val.group == "NarrowedActiveRegion"'), 'v:val.id')
     silent! call matchdelete(m)
   endfor
+endfunction
+
+function! s:SelectRegion()
+  let nr = bufnr('%')
+  let region = s:region[nr]
+
+  let wnr = bufwinnr(region.bufnr)
+  if wnr == -1
+    echohl WarningMsg
+    echo "Original buffer no longer exist! Aborting!"
+    echohl None
+    return
+  endif
+
+  exe "noa " . wnr . "wincmd w"
+  exe "keepj norm! " . region.firstline . "G"
+  exe "keepj norm! " . region.firstcol . "|"
+  exe "keepj norm! " . region.vmode
+  exe "keepj norm! " . region.lastline . "G"
+  exe "keepj norm! " . region.lastcol . "|"
+  if region.ragged
+    exe "keepj norm! $"
+  endif
+  exe "keepj norm! o"
 endfunction
 
 aug Narrow

@@ -41,6 +41,9 @@ Used in narrowed window~
 :q[uit]!		Close a narrowed region without writing back the
 			changes.
 
+                                                               *:NarrowSelect*
+:NarrowSelect		Reselect a the region
+
 <leader>nd		Narrow a region and mark it one as part of the diff
 			windows.
 
