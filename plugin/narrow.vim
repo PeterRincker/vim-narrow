@@ -61,8 +61,8 @@ function! s:Narrow(...)
     let region = {}
     let region.firstline = min([line("'<"), line("'>")])
     let region.lastline = max([line("'<"), line("'>")])
-    let region.firstcol = min([col("'<"), col("'>")])
-    let region.lastcol = max([col("'<"), col("'>")])
+    let region.firstcol = min([virtcol("'<"), virtcol("'>")])
+    let region.lastcol = max([virtcol("'<"), virtcol("'>")])
     let region.vmode = visualmode()
     let region.ragged = region.vmode == "\<c-v>" && str2nr(getregtype("a")[1:]) != abs(region.firstcol - region.lastcol) + 1
     let region.bufnr = bufnr('%')
@@ -202,8 +202,8 @@ function! s:WriteRegion(nr)
       " save new region positions via `[ and `] marks
       let s:region[a:nr].firstline = line("'[")
       let s:region[a:nr].lastline = line("']")
-      let s:region[a:nr].firstcol = col("'[")
-      let s:region[a:nr].lastcol = col("']")
+      let s:region[a:nr].firstcol = virtcol("'[")
+      let s:region[a:nr].lastcol = virtcol("']")
     finally
       if region.vmode == "\<c-v>" && !region.ragged
         let &ve = ve
@@ -324,15 +324,15 @@ function! s:HighlightRegion(region, group)
     endif
 
     if a:region.vmode == "\<c-v>"
-      let pattern .= '\%>' . (a:region.firstcol-1) . 'c'
+      let pattern .= '\%>' . (a:region.firstcol-1) . 'v'
       if !a:region.ragged
-        let pattern .= '\%<' . (a:region.lastcol+1) . 'c'
+        let pattern .= '\%<' . (a:region.lastcol+1) . 'v'
       endif
     endif
   elseif a:region.firstline == a:region.lastline
-    let pattern = '\m\%' . a:region.firstline . 'l\%>' . (a:region.firstcol-1) . 'c\%<' . (a:region.lastcol+1) . 'c'
+    let pattern = '\m\%' . a:region.firstline . 'l\%>' . (a:region.firstcol-1) . 'v\%<' . (a:region.lastcol+1) . 'v'
   else
-    let pattern = '\m\%(\%' . a:region.firstline . 'l\%>' . (a:region.firstcol-1) . 'c\|\%' . a:region.lastline . 'l\%<' . (a:region.lastcol+1) . 'c'
+    let pattern = '\m\%(\%' . a:region.firstline . 'l\%>' . (a:region.firstcol-1) . 'v\|\%' . a:region.lastline . 'l\%<' . (a:region.lastcol+1) . 'v'
     if a:region.lastline - a:region.firstline > 1
       let pattern .= '\|\%>' . (a:region.firstline) . 'l\%<' . (a:region.lastline) . 'l'
     endif
@@ -416,7 +416,7 @@ aug Narrow
   au BufReadCmd narrow://* exe "silent doau BufReadPre ".s:fnameescape(expand("<amatch>"))|exe "silent doau BufReadPost ".s:fnameescape(expand("<amatch>"))
   au BufWriteCmd narrow://* call s:WriteRegion(+expand('<abuf>'))
   au BufWipeout,BufDelete narrow://* call s:RemoveRegion(+expand('<abuf>'))
-  au WinEnter narrow://* call s:Rehighlight()
+  au WinEnter,WinLeave narrow://* call s:Rehighlight()
 aug END
 
 map <script> <silent> <Plug>Narrow :<c-u>call <SID>Narrow()<cr>
