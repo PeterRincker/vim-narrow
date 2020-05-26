@@ -65,6 +65,7 @@ function! s:Narrow(...)
     let region.lastcol = max([virtcol("'<"), virtcol("'>")])
     let region.vmode = visualmode()
     let region.ragged = region.vmode == "\<c-v>" && str2nr(getregtype("a")[1:]) != abs(region.firstcol - region.lastcol) + 1
+    let region.filetype = &filetype
     let region.bufnr = bufnr('%')
 
     if s:Overlap(region)
@@ -102,6 +103,7 @@ function! s:Narrow(...)
     set bufhidden=wipe
     set foldcolumn=0
     set nobuflisted
+    let &filetype=region.filetype
 
     sil pu a
     sil 0d _
